@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earning Dashboard</title>
+    <style>
+        :root {
+            --primary-green: #48bb78;
+            --dark-green: #2f855a;
+            --bg-grad: linear-gradient(180deg, #1a4332 0%, #0d231a 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --card-dark: #1e293b;
+            --text-dark: #1f2937;
+            --bkash-color: #d12053;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background: #0b1a13; color: #fff; min-height: 100vh; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 430px; background: #142a20; min-height: 100vh; position: relative; padding-bottom: 70px; }
+
+        /* Navigation & Header */
+        .top-header { background: #1e3a2b; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2d5a42; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #ffd700; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; border: 2px solid #fff; }
+        .vip-badge { background: linear-gradient(45deg, #b8860b, #ffd700); color: #000; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+
+        /* Stats Grid */
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+        .act-btn { background: #2e6f40; color: white; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; cursor: pointer; border: 1px solid #48bb78; }
+        .act-btn.withdraw { background: #276749; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 15px 15px; }
+        .stat-card { background: #1c3b2b; border: 1px solid #2f855a; padding: 12px; border-radius: 8px; text-align: center; }
+        .stat-card .title { font-size: 11px; color: #a0aec0; margin-bottom: 4px; }
+        .stat-card .val { font-size: 16px; font-weight: bold; color: #48bb78; }
+
+        /* Services Grid */
+        .services-area { background: #183324; margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid #28523b; }
+        .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; text-align: center; margin-top: 10px; }
+        .s-item { cursor: pointer; background: #0f2318; padding: 10px; border-radius: 8px; }
+        .s-item div { font-size: 11px; margin-top: 5px; color: #e2e8f0; }
+
+        /* Product List */
+        .product-card { background: #1c3b2b; margin: 15px; border-radius: 10px; overflow: hidden; border: 1px solid #2f855a; }
+        .p-header { background: #22543d; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; }
+        .p-body { padding: 15px; }
+        .p-info { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; color: #cbd5e1; }
+        .buy-btn { width: 100%; background: #38a169; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* Forms & Modals */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+        .modal-content { background: #183324; width: 100%; max-width: 380px; border-radius: 12px; padding: 20px; border: 1px solid #38a169; max-height: 90vh; overflow-y: auto; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; margin-bottom: 5px; color: #cbd5e1; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #2f855a; background: #0f2318; color: white; outline: none; }
+        .submit-btn { width: 100%; padding: 12px; background: #38a169; border: none; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+
+        .hidden { display: none !important; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; max-width: 430px; background: #142a20; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #28523b; }
+        .nav-item { text-align: center; font-size: 10px; color: #a0aec0; cursor: pointer; }
+        .nav-item.active { color: #38a169; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- Top Header -->
+    <div class="top-header">
+        <div class="user-info">
+            <div class="avatar">👤</div>
+            <div>
+                <div style="font-weight:bold; font-size:14px;" id="dispPhone">Guest</div>
+                <div style="font-size:10px; color:#a0aec0;">ID: <span id="dispID">535909</span></div>
+            </div>
+        </div>
+        <div>
+            <span class="vip-badge">VIP1</span>
+            <span style="cursor:pointer; margin-left:10px;" onclick="promptAdmin()">⚙️</span>
+        </div>
+    </div>
+
+    <!-- Home Page Content -->
+    <div id="pageHome">
+        <!-- Action Buttons -->
+        <div class="action-btns">
+            <div class="act-btn" onclick="showModal('modalDeposit')">💳 Recharge</div>
+            <div class="act-btn withdraw" onclick="showModal('modalWithdraw')">💸 Withdraws</div>
+        </div>
+
+        <!-- Balance Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="title">Recharge Wallet</div>
+                <div class="val">৳<span id="rechargeWal">0.00</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="title">Balance Wallet</div>
+                <div class="val">৳<span id="balWal">50.00</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="title">Total Earnings</div>
+                <div class="val">৳<span id="totEarn">0.00</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="title">Total Withdraws</div>
+                <div class="val">৳<span id="totWith">0.00</span></div>
+            </div>
+        </div>
+
+        <!-- Services -->
+        <div class="services-area">
+            <div style="font-size:13px; font-weight:bold; color:#48bb78;">Services</div>
+            <div class="services-grid">
+                <div class="s-item" onclick="showModal('modalBank')">
+                    <div>💳 Bank Account</div>
+                </div>
+                <div class="s-item" onclick="showModal('modalBonus')">
+                    <div>🎁 Bonus Code</div>
+                </div>
+                <div class="s-item" onclick="showModal('modalInvite')">
+                    <div>🔗 Invite Friends</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Investment List -->
+        <div style="padding: 0 15px; font-size:14px; font-weight:bold; color:#48bb78;">VIP Investment Products</div>
+
+        <div class="product-card">
+            <div class="p-header">
+                <b>🍫 C1 Package</b>
+                <span style="font-size:12px; color:#ffd700;">Price: ৳8,960</span>
+            </div>
+            <div class="p-body">
+                <div class="p-info"><span>Validity: 54 Days</span><span>Daily: ৳537.6</span></div>
+                <div class="p-info"><span>Total Earnings:</span><b>৳29,030.4</b></div>
+                <button class="buy-btn" onclick="buyProduct(8960)">Join Now</button>
+            </div>
+        </div>
+
+        <div class="product-card">
+            <div class="p-header">
+                <b>🍫 C3 Package</b>
+                <span style="font-size:12px; color:#ffd700;">Price: ৳28,500</span>
+            </div>
+            <div class="p-body">
+                <div class="p-info"><span>Validity: 56 Days</span><span>Daily: ৳1,852.5</span></div>
+                <div class="p-info"><span>Total Earnings:</span><b>৳103,740</b></div>
+                <button class="buy-btn" onclick="buyProduct(28500)">Join Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="nav-bar">
+        <div class="nav-item active">🏠<br>Home</div>
+        <div class="nav-item" onclick="showModal('modalAuth')">👤<br>Account</div>
+    </div>
+
+</div>
+
+<!-- Deposit Modal -->
+<div id="modalDeposit" class="modal hidden">
+    <div class="modal-content">
+        <h3>Recharge / Deposit</h3>
+        <p style="font-size:11px; color:#a0aec0; margin: 5px 0 15px;">Send Money to the number below:</p>
+        
+        <div class="form-group">
+            <label>Payment Channel</label>
+            <select id="depMethod">
+                <option value="bKash">bKash (Send Money)</option>
+                <option value="Nagad">Nagad (Send Money)</option>
+            </select>
+        </div>
+
+        <div style="background:#0f2318; padding:10px; border-radius:6px; margin-bottom:12px; text-align:center; border:1px dashed #38a169;">
+            <div style="font-size:10px; color:#a0aec0;">Send Money Number:</div>
+            <b style="font-size:18px; color:#48bb78;">01872496919</b>
+        </div>
+
+        <div class="form-group">
+            <label>Amount (৳)</label>
+            <input type="number" id="depAmt" placeholder="Enter amount">
+        </div>
+        <div class="form-group">
+            <label>Transaction ID (TrxID)</label>
+            <input type="text" id="depTrx" placeholder="Enter TrxID">
+        </div>
+
+        <button class="submit-btn" onclick="handleDeposit()">Submit Recharge</button>
+        <button class="submit-btn" style="background:#e53e3e; margin-top:5px;" onclick="hideModal('modalDeposit')">Close</button>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div id="modalWithdraw" class="modal hidden">
+    <div class="modal-content">
+        <h3>Withdraw Funds</h3>
+        <p style="font-size:11px; color:#a0aec0; margin: 5px 0 15px;">Min Withdraw: ৳110 | Tax: 9%</p>
+
+        <div class="form-group">
+            <label>Bank Method</label>
+            <select id="withMethod">
+                <option value="bKash">bKash</option>
+                <option value="Nagad">Nagad</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Account Number</label>
+            <input type="text" id="withAcc" value="01872496919" readonly>
+        </div>
+        <div class="form-group">
+            <label>Withdraw Amount (৳)</label>
+            <input type="number" id="withAmt" placeholder="Min 110">
+        </div>
+
+        <button class="submit-btn" onclick="handleWithdraw()">Submit Withdraw</button>
+        <button class="submit-btn" style="background:#e53e3e; margin-top:5px;" onclick="hideModal('modalWithdraw')">Close</button>
+    </div>
+</div>
+
+<!-- Bank Account Modal -->
+<div id="modalBank" class="modal hidden">
+    <div class="modal-content">
+        <h3>Bank Account Details</h3>
+        <div class="form-group" style="margin-top:15px;">
+            <label>Real Name</label>
+            <input type="text" id="bankName" value="Toufik" placeholder="Enter name">
+        </div>
+        <div class="form-group">
+            <label>Bank Method</label>
+            <input type="text" value="bKash / Nagad" readonly>
+        </div>
+        <div class="form-group">
+            <label>Account Number</label>
+            <input type="text" id="bankNum" value="01872496919">
+        </div>
+        <button class="submit-btn" onclick="alert('Bank Details Saved!'); hideModal('modalBank');">Save Changes</button>
+        <button class="submit-btn" style="background:#e53e3e; margin-top:5px;" onclick="hideModal('modalBank')">Close</button>
+    </div>
+</div>
+
+<!-- Bonus Modal -->
+<div id="modalBonus" class="modal hidden">
+    <div class="modal-content">
+        <h3>Redeem Bonus</h3>
+        <div class="form-group" style="margin-top:15px;">
+            <label>Bonus Code</label>
+            <input type="text" id="bonusCode" placeholder="Enter red envelope code">
+        </div>
+        <button class="submit-btn" onclick="alert('Invalid Code!');">Receive Bonus</button>
+        <button class="submit-btn" style="background:#e53e3e; margin-top:5px;" onclick="hideModal('modalBonus')">Close</button>
+    </div>
+</div>
+
+<!-- Invite Modal -->
+<div id="modalInvite" class="modal hidden">
+    <div class="modal-content" style="text-align:center;">
+        <h3>Invitation Link</h3>
+        <div style="background:#fff; padding:10px; margin:15px 0; border-radius:8px;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=ng-bd" alt="QR Code">
+        </div>
+        <p style="font-size:12px; color:#a0aec0; margin-bottom:10px;">Invitation Code: <b>345428</b></p>
+        <button class="submit-btn" onclick="navigator.clipboard.writeText('https://ng-bd.netlify.app/register/345428'); alert('Copied!');">Copy Referral Link</button>
+        <button class="submit-btn" style="background:#e53e3e; margin-top:5px;" onclick="hideModal('modalInvite')">Close</button>
+    </div>
+</div>
+
+<!-- Auth / Login Modal -->
+<div id="modalAuth" class="modal hidden">
+    <div class="modal-content">
+        <h3 id="authTitle">Login</h3>
+        <div class="form-group" style="margin-top:15px;">
+            <label>Phone Number</label>
+            <input type="tel" id="authPhone" placeholder="017XXXXXXXX">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="authPass" placeholder="Enter password">
+        </div>
+        <button class="submit-btn" onclick="handleAuth()">Submit</button>
+        <button class="submit-btn" style="background:#e53e3e; margin-top:5px;" onclick="hideModal('modalAuth')">Close</button>
+    </div>
+</div>
+
+<!-- Secret Admin Modal -->
+<div id="modalAdmin" class="modal hidden">
+    <div class="modal-content">
+        <h3>Admin Panel</h3>
+        <div style="margin-top:15px;" id="adminUserList"></div>
+        <button class="submit-btn" style="background:#e53e3e; margin-top:15px;" onclick="hideModal('modalAdmin')">Close Admin</button>
+    </div>
+</div>
+
+<script>
+    function showModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    function hideModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    function DB_getUsers() { return JSON.parse(localStorage.getItem('app_users')) || {}; }
+    function DB_saveUsers(u) { localStorage.setItem('app_users', JSON.stringify(u)); }
+
+    function handleAuth() {
+        const phone = document.getElementById('authPhone').value.trim();
+        const pass = document.getElementById('authPass').value.trim();
+        if(!phone || !pass) return alert("Fill all fields!");
+
+        let users = DB_getUsers();
+        if(!users[phone]) {
+            users[phone] = { pass: pass, balance: 50.00, recharge: 0 };
+        }
+        DB_saveUsers(users);
+        localStorage.setItem('active_user', phone);
+        
+        document.getElementById('dispPhone').innerText = phone;
+        document.getElementById('balWal').innerText = users[phone].balance.toFixed(2);
+        hideModal('modalAuth');
+        alert("Logged in successfully!");
+    }
+
+    function handleDeposit() {
+        const amt = document.getElementById('depAmt').value;
+        const trx = document.getElementById('depTrx').value;
+        if(!amt || !trx) return alert("Fill all fields!");
+        alert("Recharge request submitted successfully!");
+        hideModal('modalDeposit');
+    }
+
+    function handleWithdraw() {
+        const amt = parseFloat(document.getElementById('withAmt').value);
+        if(!amt || amt < 110) return alert("Minimum withdrawal is ৳110!");
+        alert("Withdrawal request submitted!");
+        hideModal('modalWithdraw');
+    }
+
+    function buyProduct(price) {
+        alert("Recharge wallet balance insufficient! Please Recharge ৳" + price);
+        showModal('modalDeposit');
+    }
+
+    function promptAdmin() {
+        const pin = prompt("Admin Secret PIN:");
+        if(pin === "1234") {
+            const users = DB_getUsers();
+            let html = "<h4>Registered Users:</h4>";
+            Object.keys(users).forEach(p => {
+                html += `<div style="background:#0f2318; padding:8px; margin-top:5px; border-radius:4px; font-size:12px;">📱 ${p} | Pass: ${users[p].pass}</div>`;
+            });
+            document.getElementById('adminUserList').innerHTML = html;
+            showModal('modalAdmin');
+        } else if(pin !== null) {
+            alert("Wrong PIN!");
+        }
+    }
+
+    window.onload = function() {
+        const active = localStorage.getItem('active_user');
+        if(active) {
+            document.getElementById('dispPhone').innerText = active;
+            const users = DB_getUsers();
+            if(users[active]) document.getElementById('balWal').innerText = users[active].balance.toFixed(2);
+        }
+    };
+</script>
+
+</body>
+</html>
